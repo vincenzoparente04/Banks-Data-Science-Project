@@ -1,0 +1,143 @@
+,Variable Name,Formulas,Description,Source
+obs_nr,Number of observation,,,Own elaboration
+institution_name,Name of the Institution,,Institution Name,SNL
+snl_institution_key,SNL Institution Key,,SNL Institution Key,SNL
+year,year,,,
+country_code,Country Code,,Country Code,SNL
+currency_code,currency_code,,,
+ass_cash,Cash,  ,Cash and Balances with Central Banks,SNL
+ass_intan,Total Intangibles assets,,Total Intangible Assets,SNL
+ass_loan_bank,Loans to banks,,Net Loans to Banks,SNL
+ass_loan_cust_gross,Gross customer loans,,Total Gross Loans,SNL
+ass_loan_cust_net,Net customer loans,,Total Net Loans,SNL
+ass_total,Total assets,,Total assets,SNL
+ass_trade,Total trading assets,ass_total - ass_loan_bank - ass_loan_cust_net - ass_cash - ass_intan,,Own elaboration
+liab_dep_cust,Total customer deposits,,Deposits from Cust Held at Amortized Cost,SNL
+liab_dep_bank,Total bank liabilities,,Total Deposits from Banks,SNL
+liab_derivative,Total derivatives, ,Derivative Liabilities,SNL
+liab_total,Total liabilities,,Total Liabilities,SNL
+liab_dep_cb,Deposits from central bank,,Memo: Deposits from Central Banks,SNL
+liab_debt,Total debt liabilities,liab_debt=ass_total- liab_dep_cust-liab_dep_bank-liab_derivative-equ_total,,Own elaboration
+liab_repo,Repurchase agreements,,,
+equ_total,Total Equity,,Total Equity,SNL
+equ_common,Common Equity,,Common Equity,SNL
+equ_tancommon,Tangible Common Equity,,Tangible Common Equity,SNL
+equ_tancommon2,Tangible Common Equity,"sum(equ_common, - ass_intan)",,Own elaboration
+inc_netint,Net Interest Income,,Net Interest Income,SNL
+inc_comm,Commission & fee income,,Net Fee & Commission Income,SNL
+inc_trade,Trading income ,,Realized and Unrealized Gains on Securities,SNL
+inc_oper,Operating income,,Operating Income,SNL
+inc_pbt,Net Income before Taxes,,Net Income before Taxes,SNL
+inc_ntinc,Net Income,,Net Income,SNL
+inc_oper_other,Other income ,inc_oper_other= inc_oper - inc_netint - inc_comm - inc_trade,,Own elaboration
+exp_oper,Operating expense,,Operating expense,SNL
+exp_personal,Personal expense,,Compensation & Benefits,SNL
+exp_tax,Provision for taxes,,Provision for taxes,SNL
+reg_rwa,Risk-weighted assets,,Total Risk-weighted Assets,SNL
+reg_cet1,T1 Common equity,,T1: Common Equity,SNL
+reg_tier1,Tier 1 Capital,,Tier 1 Capital,SNL
+reg_captot,Total Capital,,Total Capital,SNL
+basel_version,Capital Adequacy Method,,Capital Adequacy Method,SNL
+basel_approach,Credit Calculation Approach,,Credit Calculation Approach,SNL
+risk_costs,Asset Writedowns,,Asset Writedowns,SNL
+risk_loanlosses,Provision for Loan Losses,,Provision for Loan Losses,SNL
+owner_name,Owner name,,,
+owner_country,Owner country,,,
+operating_status,Operating status,,Operating Status,SNL
+industry,Industry,,Industry,SNL
+ownership_status,Ownership Status,,Ownership Status,SNL
+ownership_structure,Ownership Structure,,Ownership Structure,SNL
+type,Type,,,
+parent_institution_key,Parent Institution Key,,Parent Institution Key,SNL
+ultimate_parent_institution_key,Ultimate Parent Institution Key,,Ultimate Parent Institution Key,SNL
+share_ticker,Share ticker,,,
+share_symbol,Share symbol,,,
+ecbmfiidentifier,ECB MFI Identifier,,,
+swiftbic,SWIFT BIC code,,,
+type_bm2009,type_bm2009,,,Own elaboration
+type_bm2010,type_bm2010,,,Own elaboration
+type_bm2013,type_bm2013,,,Own elaboration
+type_bm2014,type_bm2014,,,Own elaboration
+type_bm2015,type_bm2015,,,Own elaboration
+cluster_original,cluster_original,,,Own elaboration
+grp,Group (business model),,,Own elaboration
+country_gdp,Country GPD,,,
+at_gdp,Share of domestic GDP,ass_total/country_gdp,,Own elaboration
+countrycode,Country code,,,
+name,Name,,,
+countryofestablishmentofthegroup,Country of establishment of the group,,,
+groundsforsignificance,,,,
+leicode,Legal Entity Identifier,,,
+ecb_ssm,SSM bank,,,
+ecb_ssm_sub,Subsidiary of SSM bank,,,
+eba_st2016,Included in EBA stress test (EBA),,,
+fsb_gsib2015,G-SIB (2015),,,
+fsb_gsib2015_sub,G-SIB subsidiary (2015),,,
+reg_euro,Euro area,,,
+ticker,ticker,,ticker,SNL
+shortname,shortname,,"Company Name, Short",SNL
+cd_snr_l_av,"CDS spread (senior, local currency, annual avg.)",,,
+cd_sub_l_av,"CDS spread (subordinated, local currency, annual avg.)",,,
+cd_snr_u_av,"CDS spread (senior, usd, annual avg.)",,,
+cd_sub_u_av,"CDS spread (subordinated, usd, annual avg.)",,,
+cd_snr_l_st,"CDS spread (senior, local currency, annual std. dev.)",,,
+cd_sub_l_st,"CDS spread (subordinated, local currency, annual  std. dev.)",,,
+cd_snr_u_st,"CDS spread (senior, usd, annual std. dev.)",,,
+cd_sub_u_st,"CDS spread (subordinated, usd, annual std. dev.)",,,
+bbcode,Bloomberg code,,,
+share_obs,Nr of observations,,,
+share_eoy,share price year-end,,,
+share_avg,annual average share prices,,,
+share_std,annual standard deviation of share prices,,,
+dep_cust,Customer deposits,liab_dep_cust / ass_total,,Own elaboration
+loan_cust,Customer loans,ass_loan_cust_net/ass_total,,Own elaboration
+at_liq,Liquidity ratio,ass_cash / ass_total,,Own elaboration
+lb_debt,Debt liabilities,liab_debt / ass_total,,Own elaboration
+at_trade,Trading assets,ass_trade / ass_total,,Own elaboration
+loan_bank,Loans to banks,ass_loan_bank/ass_total,,Own elaboration
+der_neg,Derivative exposure,liab_derivative / ass_total,,Own elaboration
+eq_tancomm2at,Leverage ratios (tangible common equity),"equ_tancommon2/sum(ass_total,-ass_intan)",,Own elaboration
+eq_tancomm2rwa,Tangible Common Equity (% Risk-weighted assets),equ_tancommon2/reg_rwa,,Own elaboration
+lb_repo,Repurchase agreements,liab_repo / ass_total,,Own elaboration
+lb_bank,Bank liabilities,liab_dep_bank / ass_total,,Own elaboration
+eq_at,Total Equity ratio,equ_total/ass_total,,Own elaboration
+eq_tier1_at,Tier1 Capital,reg_tier1 / reg_rwa,,Own elaboration
+in_tax_rt,Corporate income tax rate,exp_tax / inc_pbt,,Own elaboration
+in_roa,Return on assets,inc_pbt/ass_total,,Own elaboration
+lb_bailin,Bail-in contribution,(0.08*liab_total-0.08*reg_rwa)/liab_total,,Own elaboration
+ncnt_roa,ROA number of years by institution,count(in_roa),,Own elaboration
+in_roa_sd,ROA standard deviation by institution,sd(in_roa) if ncnt_roa > 3,,Own elaboration
+in_roa_mean,ROA mean by institution,mean(in_roa) if ncnt_roa > 3,,Own elaboration
+rt_z,Z-score ,(eq_at+inc_roa_mean)/inc_roa_sd,,Own elaboration
+rt_rwa,Risk-weighted assets ratio,reg_rwa / ass_total,,Own elaboration
+rt_risk,Provision for Loan Losses,risk_loanlosses / ass_loan_cust_gross,,Own elaboration
+ncnt_rwa,RWA number of years by institution,count(rt_rwa),,Own elaboration
+rt_rwa_mean,RWA mean by institution,mean(rt_rwa) if ncnt_rwa > 3,,Own elaboration
+rt_asf,Available stable funding,"(0.85*liab_dep_cust + 0.5*sum(ass_total,-liab_dep_cust,-liab_dep_bank,-equ_total,-liab_derivative) + equ_total)/ass_total",,Own elaboration
+rt_rsf,Required stable funding,"(0.8*ass_loan_cust_net+0.5*sum(ass_total,-ass_cash,-ass_loan_bank,-ass_loan_cust_net,-ass_intan))/ass_total",,Own elaboration
+rt_nsfr,Net stable funding ratio,rt_asf/rt_rsf,,Own elaboration
+obs,Line number,,,Own elaboration
+in_roe,Return on Equity,inc_pbt/equ_total,,Own elaboration
+in_roeq_tancomm,Return on tangible common equity,inc_pbt / equ_tancommon2,,Own elaboration
+in_rorwa,Return on risk-weighted assets,inc_pbt/reg_rwa,,Own elaboration
+in2_rorwa,Return on risk-weighted assets,in_rorwa + in_rorwa,,Own elaboration
+in_comm,Commission & fee income ratio,inc_comm/inc_oper,,Own elaboration
+in_trade,Trading income ratio,inc_trade / inc_oper,,Own elaboration
+in_int,Interest income ratio,inc_netint/inc_oper,,Own elaboration
+in_nonint,Non  Interest income ratio,(inc_oper - inc_netint)/ inc_oper,,Own elaboration
+in_other,Other income ratio," 1 - sum(in_comm,in_trade,in_int)",,Own elaboration
+in_tot,Total income,inc_oper/ass_total,,Own elaboration
+ex_cosinc,Cost-to-Income Ratio,exp_oper/inc_oper,,Own elaboration
+ex_personnel,Personal expense (% of operational expense),exp_personal / exp_oper,,Own elaboration
+ex_personnel_at,Personal expense (% of total assets),exp_personal / ass_total,,Own elaboration
+type_shv,Sharehoder-value dummy,,,Own elaboration
+type_comm,Commercial dummy,,,Own elaboration
+type_nat,Nationalised dummy,,,Own elaboration
+type_stv,Stakehoder-value dummy,,,Own elaboration
+type_coop,Cooperative dummy,,,Own elaboration
+type_savings,Savings dummy,,,Own elaboration
+type_public,Public dummy,,,Own elaboration
+own_list_dummy,,,,
+own,,,,
+cou_nr,,,,
+grp_nm,Abreviate business model name,,,Own elaboration
