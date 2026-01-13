@@ -54,7 +54,7 @@ print("PHASE 2: PRÉPARATION DES DONNÉES")
 print("="*80)
 
 # Créer la variable période
-df['periode'] = df['year'].apply(lambda x: 'Pre-crise' if x <= 2010 else 'Post-crise')
+df['periode'] = df['year'].apply(lambda x: 'Pré-crise' if x <= 2010 else 'Post-crise')
 
 key_vars = ['ass_total', 'ass_trade', 'inc_trade', 'in_roa', 'rt_rwa', 'in_roe', 'in_trade']
 available_vars = [col for col in key_vars if col in df.columns]
@@ -76,7 +76,7 @@ print("="*80)
 results_tests = []
 
 for var in available_vars:
-    pre_crise = df_clean[df_clean['periode'] == 'Pre-crise'][var].dropna()
+    pre_crise = df_clean[df_clean['periode'] == 'Pré-crise'][var].dropna()
     post_crise = df_clean[df_clean['periode'] == 'Post-crise'][var].dropna()
     
     t_stat, p_value = stats.ttest_ind(pre_crise, post_crise)
@@ -159,7 +159,7 @@ if anova_results:
 print("\n📊 TEST 3: Corrélation Pearson (Assets vs Rentabilité ROA)")
 
 correlation_results = []
-for periode in ['Pre-crise', 'Post-crise']:
+for periode in ['Pré-crise', 'Post-crise']:
     data_periode = df_clean[df_clean['periode'] == periode][['ass_total', 'in_roa']].dropna()
     
     if len(data_periode) > 2:
@@ -279,8 +279,8 @@ print("✅ Détails ACP sauvegardés: 19_acp_details.csv")
 
 # Ajouter les scores PCA au dataframe
 df_clean_indexed = df_clean[available_vars].notna().all(axis=1)
-df_clean.loc[df_clean_indexed, 'PCA_PC1'] = X_pca[:, 0]
-df_clean.loc[df_clean_indexed, 'PCA_PC2'] = X_pca[:, 1]
+df_clean.loc[df_clean_indexed, 'PCA_PC1'] = X_scaled_test[:, 0]
+df_clean.loc[df_clean_indexed, 'PCA_PC2'] = X_scaled_test[:, 1]
 
 print("\n✅ ACP calculée et ajoutée au dataframe")
 
@@ -327,6 +327,33 @@ print(cluster_profiles)
 cluster_profiles.to_csv('04_cluster_profiles.csv')
 print("\n✅ Profils des clusters sauvegardés: 04_cluster_profiles.csv")
 
+# Sauvegarder les profils par période (Pré-crise vs Post-crise)
+print("\n📊 CARACTÉRISATION DES CLUSTERS PAR PÉRIODE:\n")
+cluster_period_profiles = []
+for periode in ['Pré-crise', 'Post-crise']:
+    data = df_clean[df_clean['periode'] == periode]
+    for c in range(n_clusters):
+        subset = data[data['cluster'] == c]
+        if len(subset) > 0:
+            cluster_period_profiles.append({
+                'Période': periode,
+                'Cluster': f'C{c+1}',
+                'Nombre_banques': len(subset),
+                'Pourcentage': f"{len(subset)/len(data)*100:.1f}%",
+                'ass_total_mean': subset['ass_total'].mean(),
+                'ass_trade_mean': subset['ass_trade'].mean(),
+                'inc_trade_mean': subset['inc_trade'].mean(),
+                'in_roa_mean': subset['in_roa'].mean(),
+                'rt_rwa_mean': subset['rt_rwa'].mean(),
+                'in_roe_mean': subset['in_roe'].mean(),
+                'in_trade_mean': subset['in_trade'].mean(),
+            })
+
+df_cluster_period = pd.DataFrame(cluster_period_profiles)
+df_cluster_period.to_csv('cluster_profiles_by_period.csv', index=False)
+print(df_cluster_period)
+print("\n✅ Profils par période sauvegardés: cluster_profiles_by_period.csv")
+
 # ============================================================================
 # PHASE 5: ANALYSE PAR PAYS (RÉPONDRE À LA SOUS-QUESTION 4)
 # ============================================================================
@@ -341,7 +368,7 @@ pays_impacts = []
 for pays in df_clean['country_code'].unique():
     df_pays = df_clean[df_clean['country_code'] == pays]
     
-    pre = df_pays[df_pays['periode'] == 'Pre-crise']['ass_total'].mean()
+    pre = df_pays[df_pays['periode'] == 'Pré-crise']['ass_total'].mean()
     post = df_pays[df_pays['periode'] == 'Post-crise']['ass_total'].mean()
     
     if not np.isnan(pre) and not np.isnan(post) and pre != 0:
@@ -374,7 +401,7 @@ print("PHASE 6: ANALYSE DE CONVERGENCE - CONVERGENCE VERS UN MODÈLE UNIQUE ?")
 print("="*80)
 
 # Calculer la variance intra-groupe par période
-pre_crise_data = df_clean[df_clean['periode'] == 'Pre-crise'][available_vars]
+pre_crise_data = df_clean[df_clean['periode'] == 'Pré-crise'][available_vars]
 post_crise_data = df_clean[df_clean['periode'] == 'Post-crise'][available_vars]
 
 convergence = []
@@ -409,11 +436,11 @@ print("\n" + "="*80)
 print("PHASE 7: ANALYSE DE PRUDENCE - BANQUES PLUS PRUDENTES ?")
 print("="*80)
 
-pre_rwa = df_clean[df_clean['periode'] == 'Pre-crise']['rt_rwa'].mean()
+pre_rwa = df_clean[df_clean['periode'] == 'Pré-crise']['rt_rwa'].mean()
 post_rwa = df_clean[df_clean['periode'] == 'Post-crise']['rt_rwa'].mean()
 
-pre_roi_ratio = (df_clean[df_clean['periode'] == 'Pre-crise']['in_roe'].mean() / 
-                 (df_clean[df_clean['periode'] == 'Pre-crise']['rt_rwa'].mean() + 1e-6))
+pre_roi_ratio = (df_clean[df_clean['periode'] == 'Pré-crise']['in_roe'].mean() / 
+                 (df_clean[df_clean['periode'] == 'Pré-crise']['rt_rwa'].mean() + 1e-6))
 post_roi_ratio = (df_clean[df_clean['periode'] == 'Post-crise']['in_roe'].mean() / 
                   (df_clean[df_clean['periode'] == 'Post-crise']['rt_rwa'].mean() + 1e-6))
 
@@ -509,7 +536,7 @@ print("✅ Graphique ANOVA sauvegardé: 13_anova_clusters_boxplot.png")
 fig, ax = plt.subplots(figsize=(10, 6))
 
 # Pré-crise
-pre_data = df_clean[df_clean['periode'] == 'Pre-crise'][['ass_total', 'in_roa']].dropna()
+pre_data = df_clean[df_clean['periode'] == 'Pré-crise'][['ass_total', 'in_roa']].dropna()
 post_data = df_clean[df_clean['periode'] == 'Post-crise'][['ass_total', 'in_roa']].dropna()
 
 ax.scatter(pre_data['ass_total'], pre_data['in_roa'], alpha=0.5, label='Pré-crise', s=50, color='blue')
@@ -556,7 +583,7 @@ print("✅ Graphique Silhouette sauvegardé: 15_silhouette_scores.png")
 
 # 7. GRAPHE ACP: Scatterplot coloré par cluster
 fig, ax = plt.subplots(figsize=(10, 6))
-scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=clusters_test, cmap='viridis', s=50, alpha=0.6, edgecolors='k', linewidth=0.5)
+scatter = ax.scatter(X_scaled[:, 0], X_scaled[:, 1], c=clusters_test, cmap='viridis', s=50, alpha=0.6, edgecolors='k', linewidth=0.5)
 ax.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%} variance)', fontsize=12)
 ax.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%} variance)', fontsize=12)
 ax.set_title(f'ACP - Projection 2D des Clusters\n(Variance totale expliquée: {sum(pca.explained_variance_ratio_):.1%})', fontsize=14, fontweight='bold')
@@ -571,7 +598,7 @@ print("✅ Graphique ACP sauvegardé: 16_acp_clusters.png")
 fig, ax = plt.subplots(figsize=(12, 9))
 
 # Scatter des observations
-scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=clusters_test, cmap='viridis', s=50, alpha=0.6, edgecolors='k', linewidth=0.5)
+scatter = ax.scatter(X_scaled[:, 0], X_scaled[:, 1], c=clusters_test, cmap='viridis', s=50, alpha=0.6, edgecolors='k', linewidth=0.5)
 
 # Couleurs distinctes pour chaque variable
 colors_vars = sns.color_palette("husl", len(available_vars))
@@ -634,12 +661,14 @@ for i in range(n_clusters):
     ax.scatter(final_centroids[i, 0], final_centroids[i, 1], c=[color], s=marker_size, 
                marker='X', edgecolors='white' if i == 0 else 'none', linewidths=2 if i == 0 else 0, zorder=5)
     # Ajouter étiquette numérotée pour identifier chaque centroïde
-    # Pour C1, augmenter le contraste de l'étiquette
-    label_fontsize = 11 if i == 0 else 10
+    # Pour C1, augmenter le contraste de l'étiquette et positionner à gauche
+    label_fontsize = 9 if i == 0 else 8
     linewidth_val = 1.5 if i == 0 else 1
+    offset_x = -25 if i == 0 else 7  # À gauche pour C1, à droite pour les autres
+    offset_y = 7
     ax.annotate(f'C{i+1}', xy=(final_centroids[i, 0], final_centroids[i, 1]), 
-               xytext=(7, 7), textcoords='offset points', fontsize=label_fontsize, fontweight='bold',
-               bbox=dict(boxstyle='round,pad=0.4', facecolor=color, alpha=0.9, edgecolor='white', linewidth=linewidth_val),
+               xytext=(offset_x, offset_y), textcoords='offset points', fontsize=label_fontsize, fontweight='bold',
+               bbox=dict(boxstyle='round,pad=0.15', facecolor=color, alpha=0.9, edgecolor='white', linewidth=linewidth_val),
                color='white', zorder=6)
 
 ax.set_xlabel('Dimension 1 (normalisée)', fontsize=12)
@@ -676,11 +705,13 @@ for i in range(n_clusters):
     marker_size = 110 if i == 0 else 80
     ax1.scatter(centroids_iter_1[i, 0], centroids_iter_1[i, 1], c=[color], 
                s=marker_size, marker='X', edgecolors='white' if i == 0 else 'none', linewidths=1.5 if i == 0 else 0, zorder=5)
-    boxstyle_str = 'round,pad=0.3' if i == 0 else 'round,pad=0.2'
+    boxstyle_str = 'round,pad=0.15' if i == 0 else 'round,pad=0.1'
     alpha_val = 0.85 if i == 0 else 0.7
     linewidth_val = 1 if i == 0 else 0.5
+    offset_x = -20 if i == 0 else 3  # À gauche pour C1
+    offset_y = 5 if i == 0 else 3
     ax1.annotate(f'C{i+1}', xy=(centroids_iter_1[i, 0], centroids_iter_1[i, 1]), 
-                xytext=(5, 5) if i == 0 else (3, 3), textcoords='offset points', fontsize=10 if i == 0 else 9, fontweight='bold',
+                xytext=(offset_x, offset_y), textcoords='offset points', fontsize=8 if i == 0 else 7, fontweight='bold',
                 bbox=dict(boxstyle=boxstyle_str, facecolor=color, alpha=alpha_val, edgecolor='white', linewidth=linewidth_val),
                 color='white', zorder=6)
 ax1.set_xlabel('Dimension 1', fontsize=10)
@@ -701,8 +732,8 @@ for i in range(n_clusters):
     ax2.scatter(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1], c=[color], 
                s=80, marker='X', edgecolors='none', linewidths=0, zorder=5)
     ax2.annotate(f'C{i+1}', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]), 
-                xytext=(3, 3), textcoords='offset points', fontsize=9, fontweight='bold',
-                bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.7, edgecolor='white', linewidth=0.5),
+                xytext=(3, 3), textcoords='offset points', fontsize=7, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.1', facecolor=color, alpha=0.7, edgecolor='white', linewidth=0.5),
                 color='white', zorder=6)
     # Flèche montrant le déplacement
     ax2.annotate('', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
@@ -726,8 +757,8 @@ for i in range(n_clusters):
     ax3.scatter(final_centroids[i, 0], final_centroids[i, 1], c=[color], 
                s=80, marker='X', edgecolors='none', linewidths=0, zorder=5)
     ax3.annotate(f'C{i+1}', xy=(final_centroids[i, 0], final_centroids[i, 1]), 
-                xytext=(3, 3), textcoords='offset points', fontsize=9, fontweight='bold',
-                bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.7, edgecolor='white', linewidth=0.5),
+                xytext=(3, 3), textcoords='offset points', fontsize=7, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.1', facecolor=color, alpha=0.7, edgecolor='white', linewidth=0.5),
                 color='white', zorder=6)
     # Flèche montrant le déplacement
     ax3.annotate('', xy=(final_centroids[i, 0], final_centroids[i, 1]),
@@ -763,11 +794,13 @@ for i in range(n_clusters):
                     s=marker_size_init, marker='X', alpha=0.4 if i == 0 else 0.3, edgecolors='gray' if i == 0 else 'none', linewidths=1 if i == 0 else 0, zorder=4)
     ax_zoom1.scatter(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1], c=[color], 
                     s=marker_size_current, marker='X', edgecolors='white' if i == 0 else 'none', linewidths=1.5 if i == 0 else 0, zorder=5)
-    boxstyle_zoom = 'round,pad=0.3' if i == 0 else 'round,pad=0.2'
+    boxstyle_zoom = 'round,pad=0.15' if i == 0 else 'round,pad=0.1'
     alpha_zoom = 0.9 if i == 0 else 0.8
     linewidth_zoom = 1 if i == 0 else 0.5
+    offset_x_zoom = -22 if i == 0 else 4  # À gauche pour C1
+    offset_y_zoom = 6 if i == 0 else 4
     ax_zoom1.annotate(f'C{i+1}', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]), 
-                    xytext=(6, 6) if i == 0 else (4, 4), textcoords='offset points', fontsize=9 if i == 0 else 8, fontweight='bold',
+                    xytext=(offset_x_zoom, offset_y_zoom), textcoords='offset points', fontsize=7 if i == 0 else 6, fontweight='bold',
                     bbox=dict(boxstyle=boxstyle_zoom, facecolor=color, alpha=alpha_zoom, edgecolor='white', linewidth=linewidth_zoom),
                     color='white', zorder=6)
     ax_zoom1.annotate('', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
@@ -777,7 +810,7 @@ ax_zoom1.set_xlim(zoom_lim[0], zoom_lim[1])
 ax_zoom1.set_ylim(zoom_lim[2], zoom_lim[3])
 ax_zoom1.set_xlabel('Dimension 1 (zoomé)', fontsize=10)
 ax_zoom1.set_ylabel('Dimension 2 (zoomé)', fontsize=10)
-ax_zoom1.set_title('ZOOM: Itération 1 → Intermédiaire (mouvements clairement visibles)', fontsize=11, fontweight='bold')
+ax_zoom1.set_title('ZOOM: Itération 1 → Intermédiaire ', fontsize=11, fontweight='bold')
 ax_zoom1.grid(True, alpha=0.4)
 
 # === ZOOM 2: Gros plan Itération intermédiaire → Finale ===
@@ -804,8 +837,8 @@ for i in range(n_clusters):
     ax_zoom2.scatter(final_centroids[i, 0], final_centroids[i, 1], c=[color], 
                     s=120, marker='X', edgecolors='none', linewidths=0, zorder=5)
     ax_zoom2.annotate(f'C{i+1}', xy=(final_centroids[i, 0], final_centroids[i, 1]), 
-                    xytext=(4, 4), textcoords='offset points', fontsize=8, fontweight='bold',
-                    bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.8, edgecolor='white', linewidth=0.5),
+                    xytext=(4, 4), textcoords='offset points', fontsize=6, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.1', facecolor=color, alpha=0.8, edgecolor='white', linewidth=0.5),
                     color='white', zorder=6)
     ax_zoom2.annotate('', xy=(final_centroids[i, 0], final_centroids[i, 1]),
                      xytext=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
@@ -814,13 +847,66 @@ ax_zoom2.set_xlim(zoom_lim[0], zoom_lim[1])
 ax_zoom2.set_ylim(zoom_lim[2], zoom_lim[3])
 ax_zoom2.set_xlabel('Dimension 1 (zoomé)', fontsize=10)
 ax_zoom2.set_ylabel('Dimension 2 (zoomé)', fontsize=10)
-ax_zoom2.set_title('ZOOM: Itération Intermédiaire → Finale (mouvements clairement visibles)', fontsize=11, fontweight='bold')
+ax_zoom2.set_title('ZOOM: Itération Intermédiaire → Finale ', fontsize=11, fontweight='bold')
 ax_zoom2.grid(True, alpha=0.4)
 
-fig.suptitle(f'Évolution des Centroïdes K-Means\n(Gris = positions précédentes | Couleurs = positions actuelles | Flèches = déplacement)', 
+fig.suptitle(f'Évolution des Centroïdes K-Means', 
              fontsize=14, fontweight='bold', y=0.98)
 plt.savefig('21_kmeans_evolution_centroides.png', dpi=300, bbox_inches='tight')
 print("✅ Graphique évolution centroïdes sauvegardé: 21_kmeans_evolution_centroides.png")
+
+# 12. GRAPHE MONTRANT LES CENTROÏDES AVEC LES VARIABLES DISCRIMINANTES
+# Montrer clairement les différences entre les clusters avec les vraies variables
+fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+fig.suptitle('Profils des Centroïdes - Variables Réelles Discriminantes\n(Montre les véritables différences entre les clusters)', 
+             fontsize=14, fontweight='bold')
+
+# Variables les plus discriminantes
+variables_clés = [
+    ('ass_total', 'Actif Total (millions €)'),
+    ('in_roa', 'Rentabilité ROA (%)'),
+    ('in_roe', 'Rentabilité ROE (%)'),
+    ('inc_trade', 'Revenus Commerciaux'),
+    ('rt_rwa', 'Ratio Capital'),
+    ('ass_trade', 'Actif Commercialisable')
+]
+
+cmap_viridis = plt.cm.get_cmap('viridis')
+
+for idx, (var, label) in enumerate(variables_clés):
+    ax = axes[idx // 3, idx % 3]
+    
+    # Calculer les valeurs moyennes par cluster
+    cluster_means = []
+    for i in range(n_clusters):
+        cluster_data = df_clean[df_clean['cluster'] == i][var]
+        cluster_means.append(cluster_data.mean())
+    
+    # Créer un bar plot avec les 4 clusters
+    colors = [cmap_viridis(i / (n_clusters - 1)) for i in range(n_clusters)]
+    bars = ax.bar(range(n_clusters), cluster_means, color=colors, edgecolor='white', linewidth=2, alpha=0.8)
+    
+    # Ajouter les étiquettes C1, C2, C3, C4
+    ax.set_xticks(range(n_clusters))
+    ax.set_xticklabels([f'C{i+1}' for i in range(n_clusters)], fontsize=11, fontweight='bold')
+    ax.set_ylabel(label, fontsize=11, fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Ajouter les valeurs sur les barres
+    for i, (bar, val) in enumerate(zip(bars, cluster_means)):
+        height = bar.get_height()
+        if var == 'ass_total':
+            text = f'{val/1000:.1f}k'
+        elif var in ['in_roa', 'in_roe']:
+            text = f'{val*100:.1f}%'
+        else:
+            text = f'{val:.0f}'
+        ax.text(bar.get_x() + bar.get_width()/2., height, text,
+               ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+plt.tight_layout()
+plt.savefig('22_centroides_variables_reelles.png', dpi=300, bbox_inches='tight')
+print("✅ Graphique centroïdes variables réelles sauvegardé: 22_centroides_variables_reelles.png")
 
 # ============================================================================
 # RÉSUMÉ FINAL

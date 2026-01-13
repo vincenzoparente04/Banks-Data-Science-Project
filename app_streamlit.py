@@ -87,54 +87,54 @@ if page == "🏠 Accueil":
     suite à la crise financière de 2008 ?**
     """)
     
-    st.markdown("## 🔍 Les 6 Réponses Clés")
+    st.markdown("## Questions Clés")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        1️⃣ **Différences pré/post-crise ?**
-        ✅ OUI - Toutes les variables significatives (p < 0.05)
+        **1. Différences pré/post-crise ?**
+        Oui - Toutes les variables statistiquement significatives (p < 0.05)
         
-        2️⃣ **Éléments changés ?**
-        ⚠️ Actifs -73.6%, Trading -75.9%
+        **2. Changements observés ?**
+        Réduction drastique: Actifs -73.6%, Trading -75.9%
         
-        3️⃣ **Profils identifiés ?**
-        4 clusters avec stratégies différentes
+        **3. Profils de banques ?**
+        4 clusters avec stratégies distinctes
         """)
     
     with col2:
         st.markdown("""
-        4️⃣ **Pays affectés ?**
-        🇩🇪 Allemagne -72%, 🇮🇹 Italie -69%
+        **4. Pays les plus affectés ?**
+        Allemagne -72%, Italie -69%
         
-        5️⃣ **Convergence ?**
-        ❌ NON - Divergence observée
+        **5. Convergence entre banques ?**
+        Non - Divergence des stratégies observée
         
-        6️⃣ **Plus prudentes ?**
-        ✅ OUI - Ratio RWA baisse (-2.24%)
+        **6. Davantage de prudence ?**
+        Oui - Ratio de capital (RWA) en baisse (-2.24%)
         """)
     
     st.markdown("---")
     
-    st.markdown("## 📊 Deux Méthodes Complémentaires")
+    st.markdown("## Approche Méthodologique")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        **✅ Méthode 1: Tests t de Student**
-        - Valider si changements significatifs
-        - Mesurer taille d'effet (Cohen's d)
-        - Résultat: Tous les changements validés
+        **Tests de Significativité (t-test)**
+        - Comparer les moyennes pré et post-crise
+        - Valider la significativité statistique
+        - Mesurer la taille d'effet (Cohen's d)
         """)
     
     with col2:
         st.markdown("""
-        **✅ Méthode 2: Clustering K-means**
-        - Découvrir profils de banques
-        - Analyser stratégies différentes
-        - Résultat: 4 clusters découverts
+        **Segmentation par Clustering K-means**
+        - Identifier des profils de banques
+        - Analyser stratégies différenciées
+        - Découvrir 4 groupes distincts
         """)
 
 # ============================================================================
@@ -258,10 +258,10 @@ elif page == "🔬 Analyse Statistique":
 # ============================================================================
 
 elif page == "📐 Détail des Calculs":
-    st.title("📐 Détail des Calculs Mathématiques")
-    st.markdown("Voir les formules et les calculs avec les vraies données")
+    st.title("Détail des Calculs")
+    st.markdown("Formules et résultats des tests statistiques")
     
-    st.markdown("## 1️⃣ T-TEST DE STUDENT: Pré-crise vs Post-crise")
+    st.markdown("## T-test: Pré-crise vs Post-crise")
     
     col1, col2 = st.columns(2)
     
@@ -302,7 +302,7 @@ elif page == "📐 Détail des Calculs":
     
     st.markdown("---")
     
-    st.markdown("## 2️⃣ ANOVA 1-WAY: Comparaison des 4 Clusters")
+    st.markdown("## ANOVA: Comparaison des 4 Clusters")
     
     anova_df = pd.read_csv('10_anova_clusters.csv')
     
@@ -509,16 +509,16 @@ loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
 # ============================================================================
 
 elif page == "📊 Analyse ACP":
-    st.title("📊 Analyse en Composantes Principales (ACP)")
-    st.markdown("Réduction dimensionnelle: 7 variables → 2 dimensions pour visualisation")
+    st.title("Analyse en Composantes Principales")
+    st.markdown("Réduction dimensionnelle pour visualisation et interprétation")
     
-    st.markdown("## 🎯 Objectif de l'ACP")
+    st.markdown("## Objectif")
     st.markdown("""
     L'ACP permet de:
-    - **Visualiser** les données multi-dimensionnelles en 2D
-    - **Identifier** les directions de plus grande variance
-    - **Comprendre** les corrélations entre variables
-    - **Valider** la qualité du clustering en 2D
+    - Visualiser les données multi-dimensionnelles en 2D
+    - Identifier les directions de plus grande variance
+    - Comprendre les corrélations entre variables
+    - Valider la qualité du clustering en 2D
     """)
     
     st.markdown("## 📈 Variance Expliquée")
@@ -538,8 +538,8 @@ elif page == "📊 Analyse ACP":
     
     st.markdown("---")
     
-    st.markdown("## 1️⃣ Projection ACP - Clusters en 2D")
-    st.markdown("Chaque point = une banque, coloré par son cluster")
+    st.markdown("## 1. Projection ACP - Clusters en 2D")
+    st.markdown("Visualisation de chaque banque par ses 2 composantes principales, colorée par cluster")
     
     try:
         from PIL import Image
@@ -550,8 +550,8 @@ elif page == "📊 Analyse ACP":
     
     st.markdown("---")
     
-    st.markdown("## 2️⃣ Biplot - Contributions des Variables")
-    st.markdown("Chaque flèche = une variable | Couleur distincte pour chaque variable")
+    st.markdown("## 2. Biplot - Contributions des Variables")
+    st.markdown("Chaque flèche représente une variable et sa contribution aux composantes principales")
     
     try:
         img = Image.open('17_acp_biplot.png')
@@ -569,8 +569,8 @@ elif page == "📊 Analyse ACP":
     
     st.markdown("---")
     
-    st.markdown("## 3️⃣ Variance Cumulée")
-    st.markdown("Combien de variance on explique avec k composantes?")
+    st.markdown("## 3. Variance Cumulée")
+    st.markdown("Variance explicative en fonction du nombre de composantes utilisées")
     
     try:
         img = Image.open('18_acp_variance.png')
@@ -622,9 +622,55 @@ elif page == "🎯 Clustering":
     # Charger les résultats du clustering
     cluster_profiles = pd.read_csv('04_cluster_profiles.csv', index_col=0)
     
-    st.markdown("## 👥 Profils des Clusters")
+    # Charger les profils par période
+    try:
+        cluster_by_period = pd.read_csv('cluster_profiles_by_period.csv')
+        has_period_data = True
+    except:
+        has_period_data = False
+    
+    st.markdown("## Profils Globaux")
     
     st.dataframe(cluster_profiles.round(4), use_container_width=True)
+    
+    st.markdown("---")
+    
+    st.markdown("## Comparaison Pré-crise vs Post-crise")
+    
+    if has_period_data:
+        st.markdown("""
+        Distribution des clusters avant et après la crise financière de 2008.
+        Observe comment les banques se répartissent différemment selon la période.
+        """)
+        
+        # Afficher le tableau complet
+        display_cols = ['Période', 'Cluster', 'Nombre_banques', 'Pourcentage', 
+                       'ass_total_mean', 'in_roa_mean', 'in_roe_mean']
+        display_data = cluster_by_period[display_cols].copy()
+        display_data.columns = ['Période', 'Cluster', 'Nombre', '%', 'Actifs (moy)', 'ROA (moy)', 'ROE (moy)']
+        
+        st.dataframe(display_data, use_container_width=True, hide_index=True)
+        
+        # Visualisation de la distribution
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("### Pré-crise (1,441 banques)")
+            pre_data = cluster_by_period[cluster_by_period['Période'] == 'Pré-crise']
+            fig, ax = plt.subplots(figsize=(8, 5))
+            ax.pie(pre_data['Nombre_banques'], labels=pre_data['Cluster'], autopct='%1.1f%%',
+                  colors=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'])
+            ax.set_title('Distribution des Clusters (Pré-crise)')
+            st.pyplot(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Post-crise (6,808 banques)")
+            post_data = cluster_by_period[cluster_by_period['Période'] == 'Post-crise']
+            fig, ax = plt.subplots(figsize=(8, 5))
+            ax.pie(post_data['Nombre_banques'], labels=post_data['Cluster'], autopct='%1.1f%%',
+                  colors=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'])
+            ax.set_title('Distribution des Clusters (Post-crise)')
+            st.pyplot(fig, use_container_width=True)
     
     st.markdown("---")
     
@@ -653,35 +699,66 @@ elif page == "🎯 Clustering":
 
     st.markdown("---")
     
-    st.markdown("## ❌ Centroïdes Finales du Clustering (Croix X)")
+    st.markdown("## Clusters en Projection PCA")
     st.markdown("""
-    Les centroïdes (points rouges marqués avec des **croix X**) représentent le **centre de chaque cluster**.
-    C'est la position moyenne de tous les points appartenant à ce cluster, dans l'espace des variables normalisées.
+    Visualisation des 4 clusters dans l'espace des deux premières composantes principales.
+    Chaque point représente une banque colorée selon son cluster d'appartenance.
+    """)
+    
+    try:
+        img = plt.imread('05_clusters_pca.png')
+        st.image(img, caption="Clusters projetés sur les composantes principales")
+    except:
+        st.warning("Graphique de projection PCA non disponible")
+
+    st.markdown("---")
+    
+    st.markdown("## Centroïdes Finales")
+    st.markdown("""
+    Positions finales des 4 centroïdes après convergence de l'algorithme K-means.
+    Les croix colorées indiquent le centre de chaque cluster.
     """)
     
     try:
         img = plt.imread('20_kmeans_centroides_finales.png')
-        st.image(img, caption="K-Means: Centroïdes Finales - La position finale des 4 centroïdes après convergence de l'algorithme")
+        st.image(img, caption="Position finale des 4 centroïdes")
     except:
         st.warning("Graphique des centroïdes non disponible")
 
     st.markdown("---")
     
-    st.markdown("## 🔄 Évolution des Centroïdes lors de la Convergence")
+    st.markdown("## Évolution des Centroïdes")
     st.markdown("""
-    Ce graphique montre **comment les centroïdes se déplacent** lors des itérations du K-means:
-    - 🔵 **Cercles bleus**: Position intermédiaire des centroïdes (après 3 itérations)
-    - ❌ **Croix rouges**: Position finale des centroïdes (après convergence complète)
-    - 🟣 **Flèches violettes**: Indiquent le déplacement de chaque centroïde
-    
-    Cela montre que l'algorithme a bien **bougé les centroïdes** pour trouver les groupes optimaux.
+    Déplacement des centroïdes au cours des itérations de l'algorithme:
+    - **Gauche**: Itération 1 (positions initiales)
+    - **Milieu**: Itération intermédiaire (mouvement des centroïdes)
+    - **Droite**: Itération finale (convergence)
+    - **Bas**: Zooms détaillés sur chaque phase
     """)
     
     try:
         img = plt.imread('21_kmeans_evolution_centroides.png')
-        st.image(img, caption="Évolution des Centroïdes: De la position intermédiaire (itération 3) à la position finale")
+        st.image(img, caption="Évolution des centroïdes")
     except:
         st.warning("Graphique d'évolution des centroïdes non disponible")
+
+    st.markdown("---")
+    
+    st.markdown("## Profils Réels des Clusters")
+    st.markdown("""
+    Caractéristiques distinctives des 4 clusters basées sur les variables financières:
+    
+    - **C1** (8,124 institutions): Petites et moyennes banques avec profil équilibré
+    - **C2** (108 institutions): Groupe affecté par la crise avec rentabilité dégradée
+    - **C3** (2 institutions): Cas extrêmes avec revenus commerciaux négatifs
+    - **C4** (15 institutions): Grandes banques du secteur coopératif
+    """)
+    
+    try:
+        img = plt.imread('22_centroides_variables_reelles.png')
+        st.image(img, caption="Comparaison des variables financières par cluster")
+    except:
+        st.warning("Graphique des profils réels des centroïdes non disponible")
 
 # ============================================================================
 # PAGE 7: ANALYSE PAR PAYS
