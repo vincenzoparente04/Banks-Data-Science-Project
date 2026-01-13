@@ -209,6 +209,82 @@ if silhouette_by_cluster:
     print("✅ Résultats Silhouette sauvegardés: 12_silhouette_scores.csv")
 
 # ============================================================================
+# PHASE 3C: ANALYSE EN COMPOSANTES PRINCIPALES (ACP)
+# ============================================================================
+
+print("\n" + "="*80)
+print("PHASE 3C: ANALYSE EN COMPOSANTES PRINCIPALES (ACP)")
+print("="*80)
+
+from sklearn.decomposition import PCA
+
+print("\n📊 ACP: Réduction 7D → 2D pour visualisation")
+
+# Effectuer l'ACP
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled_test)
+
+print(f"   Variance expliquée PC1: {pca.explained_variance_ratio_[0]:.2%}")
+print(f"   Variance expliquée PC2: {pca.explained_variance_ratio_[1]:.2%}")
+print(f"   Variance totale expliquée: {sum(pca.explained_variance_ratio_):.2%}")
+
+# Sauvegarder les résultats ACP
+acp_results = {
+    'PC1_variance': pca.explained_variance_ratio_[0],
+    'PC2_variance': pca.explained_variance_ratio_[1],
+    'Total_variance': sum(pca.explained_variance_ratio_),
+    'PC1_components': dict(zip(available_vars, pca.components_[0])),
+    'PC2_components': dict(zip(available_vars, pca.components_[1]))
+}
+
+print("\n📈 Contribution des variables à PC1:")
+for var, coef in zip(available_vars, pca.components_[0]):
+    print(f"   {var}: {coef:.4f}")
+
+print("\n📈 Contribution des variables à PC2:")
+for var, coef in zip(available_vars, pca.components_[1]):
+    print(f"   {var}: {coef:.4f}")
+
+# SAUVEGARDER LES DÉTAILS ACP DANS UN CSV
+acp_details = []
+
+# Ligne 1: Variance expliquée par composante
+acp_details.append({
+    'Element': 'Variance expliquée (%)',
+    'PC1': f"{pca.explained_variance_ratio_[0]:.2%}",
+    'PC2': f"{pca.explained_variance_ratio_[1]:.2%}",
+    'Total_2D': f"{sum(pca.explained_variance_ratio_):.2%}"
+})
+
+# Ligne 2: Variance brute
+acp_details.append({
+    'Element': 'Valeurs propres (variance)',
+    'PC1': f"{pca.explained_variance_[0]:.4f}",
+    'PC2': f"{pca.explained_variance_[1]:.4f}",
+    'Total_2D': f"{sum(pca.explained_variance_):.4f}"
+})
+
+# Lignes suivantes: Loadings de chaque variable
+for var, pc1_load, pc2_load in zip(available_vars, pca.components_[0], pca.components_[1]):
+    acp_details.append({
+        'Element': f'Loading_{var}',
+        'PC1': f"{pc1_load:.6f}",
+        'PC2': f"{pc2_load:.6f}",
+        'Total_2D': f"{np.sqrt(pc1_load**2 + pc2_load**2):.6f}"
+    })
+
+df_acp_details = pd.DataFrame(acp_details)
+df_acp_details.to_csv('19_acp_details.csv', index=False)
+print("✅ Détails ACP sauvegardés: 19_acp_details.csv")
+
+# Ajouter les scores PCA au dataframe
+df_clean_indexed = df_clean[available_vars].notna().all(axis=1)
+df_clean.loc[df_clean_indexed, 'PCA_PC1'] = X_pca[:, 0]
+df_clean.loc[df_clean_indexed, 'PCA_PC2'] = X_pca[:, 1]
+
+print("\n✅ ACP calculée et ajoutée au dataframe")
+
+# ============================================================================
 # PHASE 4: CLUSTERING K-MEANS (MÉTHODE 2)
 # ============================================================================
 
@@ -220,10 +296,21 @@ X = df_clean[available_vars].dropna()
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# K-means avec k=4
+# K-means avec k=4 et sauvegarde de l'initialisation
 n_clusters = 4
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+
+# === ÉTAPE 1: K-means avec capture des centroïdes finales ===
+kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10, max_iter=300)
+
+# Faire le clustering
 df_clean.loc[df_clean[available_vars].notna().all(axis=1), 'cluster'] = kmeans.fit_predict(X_scaled)
+
+# Sauvegarder les centroïdes finales
+final_centroids = kmeans.cluster_centers_.copy()
+
+print(f"\n📊 K-means convergé en {kmeans.n_iter_} itérations")
+print(f"📊 Inertie (sum of squared distances): {kmeans.inertia_:.2f}")
+print(f"✅ Centroïdes finales sauvegardées")
 
 print(f"\n📊 Distribution des clusters:")
 print(df_clean['cluster'].value_counts().sort_index())
@@ -466,6 +553,274 @@ ax.grid(True, alpha=0.3, axis='y')
 plt.tight_layout()
 plt.savefig('15_silhouette_scores.png', dpi=300, bbox_inches='tight')
 print("✅ Graphique Silhouette sauvegardé: 15_silhouette_scores.png")
+
+# 7. GRAPHE ACP: Scatterplot coloré par cluster
+fig, ax = plt.subplots(figsize=(10, 6))
+scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=clusters_test, cmap='viridis', s=50, alpha=0.6, edgecolors='k', linewidth=0.5)
+ax.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%} variance)', fontsize=12)
+ax.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%} variance)', fontsize=12)
+ax.set_title(f'ACP - Projection 2D des Clusters\n(Variance totale expliquée: {sum(pca.explained_variance_ratio_):.1%})', fontsize=14, fontweight='bold')
+cbar = plt.colorbar(scatter, ax=ax)
+cbar.set_label('Cluster')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('16_acp_clusters.png', dpi=300, bbox_inches='tight')
+print("✅ Graphique ACP sauvegardé: 16_acp_clusters.png")
+
+# 8. GRAPHE BIPLOT: Contributions des variables en ACP
+fig, ax = plt.subplots(figsize=(12, 9))
+
+# Scatter des observations
+scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=clusters_test, cmap='viridis', s=50, alpha=0.6, edgecolors='k', linewidth=0.5)
+
+# Couleurs distinctes pour chaque variable
+colors_vars = sns.color_palette("husl", len(available_vars))
+
+# Flèches (loadings) des variables avec couleurs
+scale_factor = 3.5
+for i, var in enumerate(available_vars):
+    ax.arrow(0, 0, 
+            pca.components_[0, i] * scale_factor, 
+            pca.components_[1, i] * scale_factor,
+            head_width=0.2, head_length=0.2, fc=colors_vars[i], ec=colors_vars[i], 
+            alpha=0.8, linewidth=2.5, label=var)
+
+ax.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%})', fontsize=12)
+ax.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%})', fontsize=12)
+ax.set_title('Biplot ACP - Contributions des Variables\n(Chaque couleur = une variable | Longueur = importance)', 
+            fontsize=14, fontweight='bold')
+ax.grid(True, alpha=0.3)
+ax.axhline(y=0, color='k', linewidth=0.5)
+ax.axvline(x=0, color='k', linewidth=0.5)
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=10, title='Variables')
+plt.tight_layout()
+plt.savefig('17_acp_biplot.png', dpi=300, bbox_inches='tight')
+print("✅ Biplot ACP sauvegardé: 17_acp_biplot.png")
+
+# 9. GRAPHE Variance expliquée
+pca_all = PCA()
+pca_all.fit(X_scaled_test)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+cumsum = np.cumsum(pca_all.explained_variance_ratio_)
+ax.plot(range(1, len(pca_all.explained_variance_ratio_) + 1), 
+        cumsum, 'bo-', linewidth=2, markersize=8)
+ax.axhline(y=0.95, color='r', linestyle='--', linewidth=2, label='95% variance')
+ax.axhline(y=0.90, color='orange', linestyle='--', linewidth=2, label='90% variance')
+ax.set_xlabel('Nombre de Composantes', fontsize=12)
+ax.set_ylabel('Variance Cumulative Expliquée', fontsize=12)
+ax.set_title('Analyse en Composantes Principales\nVariance Expliquée vs Nombre de Composantes', fontsize=14, fontweight='bold')
+ax.grid(True, alpha=0.3)
+ax.set_xticks(range(1, len(pca_all.explained_variance_ratio_) + 1))
+ax.legend()
+plt.tight_layout()
+plt.savefig('18_acp_variance.png', dpi=300, bbox_inches='tight')
+print("✅ Graphique variance ACP sauvegardé: 18_acp_variance.png")
+
+# 10. GRAPHE CLUSTERING AVEC CENTROÏDES (Version finale)
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Scatter des observations colorées par cluster
+scatter = ax.scatter(X_scaled[:, 0], X_scaled[:, 1], c=df_clean.loc[X.index, 'cluster'], 
+                     cmap='viridis', s=50, alpha=0.5, edgecolors='none',
+                     label='Observations')
+
+# Centroïdes finales: petites croix avec couleurs des groupes
+cmap_viridis = plt.cm.get_cmap('viridis')
+for i in range(n_clusters):
+    color = cmap_viridis(i / (n_clusters - 1))
+    # Augmenter légèrement la taille du marker pour C1 (index 0) pour meilleure visibilité
+    marker_size = 120 if i == 0 else 80
+    ax.scatter(final_centroids[i, 0], final_centroids[i, 1], c=[color], s=marker_size, 
+               marker='X', edgecolors='white' if i == 0 else 'none', linewidths=2 if i == 0 else 0, zorder=5)
+    # Ajouter étiquette numérotée pour identifier chaque centroïde
+    # Pour C1, augmenter le contraste de l'étiquette
+    label_fontsize = 11 if i == 0 else 10
+    linewidth_val = 1.5 if i == 0 else 1
+    ax.annotate(f'C{i+1}', xy=(final_centroids[i, 0], final_centroids[i, 1]), 
+               xytext=(7, 7), textcoords='offset points', fontsize=label_fontsize, fontweight='bold',
+               bbox=dict(boxstyle='round,pad=0.4', facecolor=color, alpha=0.9, edgecolor='white', linewidth=linewidth_val),
+               color='white', zorder=6)
+
+ax.set_xlabel('Dimension 1 (normalisée)', fontsize=12)
+ax.set_ylabel('Dimension 2 (normalisée)', fontsize=12)
+ax.set_title(f'K-Means Clustering (k=4) - Centroïdes Finales\n(Itérations: {kmeans.n_iter_}, Inertie: {kmeans.inertia_:.2f})', 
+             fontsize=14, fontweight='bold')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('20_kmeans_centroides_finales.png', dpi=300, bbox_inches='tight')
+print("✅ Graphique centroïdes finales sauvegardé: 20_kmeans_centroides_finales.png")
+
+# 11. GRAPHE MONTRANT L'ÉVOLUTION DES CENTROÏDES EN 3 ÉTAPES AVEC FLÈCHES ET ZOOMS
+# Étape 1: Itération 1
+kmeans_iter_1 = KMeans(n_clusters=n_clusters, random_state=42, n_init=10, max_iter=1)
+centroids_iter_1 = kmeans_iter_1.fit(X_scaled).cluster_centers_.copy()
+
+# Étape 2: Itération intermédiaire
+iter_mid = max(2, kmeans.n_iter_ // 2)
+kmeans_iter_mid = KMeans(n_clusters=n_clusters, random_state=42, n_init=10, max_iter=iter_mid)
+centroids_iter_mid = kmeans_iter_mid.fit(X_scaled).cluster_centers_.copy()
+
+# Créer figure avec 3 subplots principaux + 2 petits zooms
+fig = plt.figure(figsize=(20, 6))
+gs = fig.add_gridspec(2, 4, height_ratios=[4, 1], hspace=0.35, wspace=0.3)
+
+cmap_viridis = plt.cm.get_cmap('viridis')
+
+# === SUBPLOT 1: Itération 1 ===
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.scatter(X_scaled[:, 0], X_scaled[:, 1], c=df_clean.loc[X.index, 'cluster'], 
+           cmap='viridis', s=50, alpha=0.5, edgecolors='none')
+for i in range(n_clusters):
+    color = cmap_viridis(i / (n_clusters - 1))
+    marker_size = 110 if i == 0 else 80
+    ax1.scatter(centroids_iter_1[i, 0], centroids_iter_1[i, 1], c=[color], 
+               s=marker_size, marker='X', edgecolors='white' if i == 0 else 'none', linewidths=1.5 if i == 0 else 0, zorder=5)
+    boxstyle_str = 'round,pad=0.3' if i == 0 else 'round,pad=0.2'
+    alpha_val = 0.85 if i == 0 else 0.7
+    linewidth_val = 1 if i == 0 else 0.5
+    ax1.annotate(f'C{i+1}', xy=(centroids_iter_1[i, 0], centroids_iter_1[i, 1]), 
+                xytext=(5, 5) if i == 0 else (3, 3), textcoords='offset points', fontsize=10 if i == 0 else 9, fontweight='bold',
+                bbox=dict(boxstyle=boxstyle_str, facecolor=color, alpha=alpha_val, edgecolor='white', linewidth=linewidth_val),
+                color='white', zorder=6)
+ax1.set_xlabel('Dimension 1', fontsize=10)
+ax1.set_ylabel('Dimension 2', fontsize=10)
+ax1.set_title(f'Itération 1\n(Centroïdes initiales)', fontsize=11, fontweight='bold')
+ax1.grid(True, alpha=0.3)
+
+# === SUBPLOT 2: Itération intermédiaire avec flèches ===
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.scatter(X_scaled[:, 0], X_scaled[:, 1], c=df_clean.loc[X.index, 'cluster'], 
+           cmap='viridis', s=50, alpha=0.5, edgecolors='none')
+for i in range(n_clusters):
+    color = cmap_viridis(i / (n_clusters - 1))
+    # Positions précédentes en gris transparent
+    ax2.scatter(centroids_iter_1[i, 0], centroids_iter_1[i, 1], c='gray', 
+               s=80, marker='X', alpha=0.3, edgecolors='none', linewidths=0, zorder=4)
+    # Positions actuelles en couleur
+    ax2.scatter(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1], c=[color], 
+               s=80, marker='X', edgecolors='none', linewidths=0, zorder=5)
+    ax2.annotate(f'C{i+1}', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]), 
+                xytext=(3, 3), textcoords='offset points', fontsize=9, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.7, edgecolor='white', linewidth=0.5),
+                color='white', zorder=6)
+    # Flèche montrant le déplacement
+    ax2.annotate('', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
+                xytext=(centroids_iter_1[i, 0], centroids_iter_1[i, 1]),
+                arrowprops=dict(arrowstyle='->', lw=1.5, color=color, alpha=0.7))
+ax2.set_xlabel('Dimension 1', fontsize=10)
+ax2.set_ylabel('Dimension 2', fontsize=10)
+ax2.set_title(f'Itération {iter_mid}\n(Mouvement des centroïdes)', fontsize=11, fontweight='bold')
+ax2.grid(True, alpha=0.3)
+
+# === SUBPLOT 3: Itération finale avec flèches ===
+ax3 = fig.add_subplot(gs[0, 2])
+ax3.scatter(X_scaled[:, 0], X_scaled[:, 1], c=df_clean.loc[X.index, 'cluster'], 
+           cmap='viridis', s=50, alpha=0.5, edgecolors='none')
+for i in range(n_clusters):
+    color = cmap_viridis(i / (n_clusters - 1))
+    # Positions précédentes en gris transparent
+    ax3.scatter(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1], c='gray', 
+               s=80, marker='X', alpha=0.3, edgecolors='none', linewidths=0, zorder=4)
+    # Positions finales en couleur
+    ax3.scatter(final_centroids[i, 0], final_centroids[i, 1], c=[color], 
+               s=80, marker='X', edgecolors='none', linewidths=0, zorder=5)
+    ax3.annotate(f'C{i+1}', xy=(final_centroids[i, 0], final_centroids[i, 1]), 
+                xytext=(3, 3), textcoords='offset points', fontsize=9, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.7, edgecolor='white', linewidth=0.5),
+                color='white', zorder=6)
+    # Flèche montrant le déplacement
+    ax3.annotate('', xy=(final_centroids[i, 0], final_centroids[i, 1]),
+                xytext=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
+                arrowprops=dict(arrowstyle='->', lw=1.5, color=color, alpha=0.7))
+ax3.set_xlabel('Dimension 1', fontsize=10)
+ax3.set_ylabel('Dimension 2', fontsize=10)
+ax3.set_title(f'Itération {kmeans.n_iter_} (Final)\n(Convergence)', fontsize=11, fontweight='bold')
+ax3.grid(True, alpha=0.3)
+
+# === ZOOM 1: Gros plan Itération 1 → Intermédiaire ===
+ax_zoom1 = fig.add_subplot(gs[1, 0:2])
+# Calculer les limites du zoom (région autour des centroïdes)
+all_centroids_1_mid = np.vstack([centroids_iter_1, centroids_iter_mid])
+center = all_centroids_1_mid.mean(axis=0)
+zoom_range = np.abs(all_centroids_1_mid - center).max() * 1.5
+zoom_lim = [center[0] - zoom_range, center[0] + zoom_range, 
+            center[1] - zoom_range, center[1] + zoom_range]
+
+# Afficher les points autour de la région de zoom
+mask_zoom = ((X_scaled[:, 0] >= zoom_lim[0]) & (X_scaled[:, 0] <= zoom_lim[1]) &
+             (X_scaled[:, 1] >= zoom_lim[2]) & (X_scaled[:, 1] <= zoom_lim[3]))
+ax_zoom1.scatter(X_scaled[mask_zoom, 0], X_scaled[mask_zoom, 1], 
+                c=df_clean.loc[X.index[mask_zoom], 'cluster'], 
+                cmap='viridis', s=50, alpha=0.5, edgecolors='none')
+
+# Afficher centroïdes avec flèches en gros plan
+for i in range(n_clusters):
+    color = cmap_viridis(i / (n_clusters - 1))
+    marker_size_init = 150 if i == 0 else 120
+    marker_size_current = 150 if i == 0 else 120
+    ax_zoom1.scatter(centroids_iter_1[i, 0], centroids_iter_1[i, 1], c='gray', 
+                    s=marker_size_init, marker='X', alpha=0.4 if i == 0 else 0.3, edgecolors='gray' if i == 0 else 'none', linewidths=1 if i == 0 else 0, zorder=4)
+    ax_zoom1.scatter(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1], c=[color], 
+                    s=marker_size_current, marker='X', edgecolors='white' if i == 0 else 'none', linewidths=1.5 if i == 0 else 0, zorder=5)
+    boxstyle_zoom = 'round,pad=0.3' if i == 0 else 'round,pad=0.2'
+    alpha_zoom = 0.9 if i == 0 else 0.8
+    linewidth_zoom = 1 if i == 0 else 0.5
+    ax_zoom1.annotate(f'C{i+1}', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]), 
+                    xytext=(6, 6) if i == 0 else (4, 4), textcoords='offset points', fontsize=9 if i == 0 else 8, fontweight='bold',
+                    bbox=dict(boxstyle=boxstyle_zoom, facecolor=color, alpha=alpha_zoom, edgecolor='white', linewidth=linewidth_zoom),
+                    color='white', zorder=6)
+    ax_zoom1.annotate('', xy=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
+                     xytext=(centroids_iter_1[i, 0], centroids_iter_1[i, 1]),
+                     arrowprops=dict(arrowstyle='->', lw=2.5, color=color, alpha=0.9))
+ax_zoom1.set_xlim(zoom_lim[0], zoom_lim[1])
+ax_zoom1.set_ylim(zoom_lim[2], zoom_lim[3])
+ax_zoom1.set_xlabel('Dimension 1 (zoomé)', fontsize=10)
+ax_zoom1.set_ylabel('Dimension 2 (zoomé)', fontsize=10)
+ax_zoom1.set_title('ZOOM: Itération 1 → Intermédiaire (mouvements clairement visibles)', fontsize=11, fontweight='bold')
+ax_zoom1.grid(True, alpha=0.4)
+
+# === ZOOM 2: Gros plan Itération intermédiaire → Finale ===
+ax_zoom2 = fig.add_subplot(gs[1, 2:4])
+# Calculer les limites du zoom
+all_centroids_mid_final = np.vstack([centroids_iter_mid, final_centroids])
+center = all_centroids_mid_final.mean(axis=0)
+zoom_range = np.abs(all_centroids_mid_final - center).max() * 1.5
+zoom_lim = [center[0] - zoom_range, center[0] + zoom_range, 
+            center[1] - zoom_range, center[1] + zoom_range]
+
+# Afficher les points autour de la région de zoom
+mask_zoom = ((X_scaled[:, 0] >= zoom_lim[0]) & (X_scaled[:, 0] <= zoom_lim[1]) &
+             (X_scaled[:, 1] >= zoom_lim[2]) & (X_scaled[:, 1] <= zoom_lim[3]))
+ax_zoom2.scatter(X_scaled[mask_zoom, 0], X_scaled[mask_zoom, 1], 
+                c=df_clean.loc[X.index[mask_zoom], 'cluster'], 
+                cmap='viridis', s=50, alpha=0.5, edgecolors='none')
+
+# Afficher centroïdes avec flèches en gros plan
+for i in range(n_clusters):
+    color = cmap_viridis(i / (n_clusters - 1))
+    ax_zoom2.scatter(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1], c='gray', 
+                    s=120, marker='X', alpha=0.3, edgecolors='none', linewidths=0, zorder=4)
+    ax_zoom2.scatter(final_centroids[i, 0], final_centroids[i, 1], c=[color], 
+                    s=120, marker='X', edgecolors='none', linewidths=0, zorder=5)
+    ax_zoom2.annotate(f'C{i+1}', xy=(final_centroids[i, 0], final_centroids[i, 1]), 
+                    xytext=(4, 4), textcoords='offset points', fontsize=8, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.8, edgecolor='white', linewidth=0.5),
+                    color='white', zorder=6)
+    ax_zoom2.annotate('', xy=(final_centroids[i, 0], final_centroids[i, 1]),
+                     xytext=(centroids_iter_mid[i, 0], centroids_iter_mid[i, 1]),
+                     arrowprops=dict(arrowstyle='->', lw=2.5, color=color, alpha=0.9))
+ax_zoom2.set_xlim(zoom_lim[0], zoom_lim[1])
+ax_zoom2.set_ylim(zoom_lim[2], zoom_lim[3])
+ax_zoom2.set_xlabel('Dimension 1 (zoomé)', fontsize=10)
+ax_zoom2.set_ylabel('Dimension 2 (zoomé)', fontsize=10)
+ax_zoom2.set_title('ZOOM: Itération Intermédiaire → Finale (mouvements clairement visibles)', fontsize=11, fontweight='bold')
+ax_zoom2.grid(True, alpha=0.4)
+
+fig.suptitle(f'Évolution des Centroïdes K-Means\n(Gris = positions précédentes | Couleurs = positions actuelles | Flèches = déplacement)', 
+             fontsize=14, fontweight='bold', y=0.98)
+plt.savefig('21_kmeans_evolution_centroides.png', dpi=300, bbox_inches='tight')
+print("✅ Graphique évolution centroïdes sauvegardé: 21_kmeans_evolution_centroides.png")
 
 # ============================================================================
 # RÉSUMÉ FINAL

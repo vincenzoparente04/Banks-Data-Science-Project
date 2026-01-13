@@ -60,7 +60,7 @@ st.sidebar.title("🧭 Navigation")
 page = st.sidebar.radio(
     "Sélectionnez une page:",
     ["🏠 Accueil", "📊 Tableau de bord", "🔬 Analyse Statistique", 
-     "📐 Détail des Calculs", "🎯 Clustering", "🌍 Analyse par Pays"]
+     "📐 Détail des Calculs", "📊 Analyse ACP", "🎯 Clustering", "🌍 Analyse par Pays"]
 )
 
 # ============================================================================
@@ -364,7 +364,7 @@ elif page == "📐 Détail des Calculs":
         try:
             from PIL import Image
             img = Image.open('14_correlation_assets_roa.png')
-            st.image(img, use_column_width=True)
+            st.image(img, width='stretch')
         except:
             st.info("Graphique non disponible")
     
@@ -402,9 +402,76 @@ elif page == "📐 Détail des Calculs":
         st.markdown("### Graphique")
         try:
             img = Image.open('15_silhouette_scores.png')
-            st.image(img, use_column_width=True)
+            st.image(img, width='stretch')
         except:
             st.info("Graphique non disponible")
+    
+    st.markdown("---")
+    
+    st.markdown("---")
+    
+    st.markdown("## 5️⃣ ANALYSE EN COMPOSANTES PRINCIPALES (ACP): Détails des Calculs")
+    
+    st.markdown("""
+    **Objectif:** Réduire les 7 variables financières en 2 composantes principales tout en conservant le maximum d'information.
+    
+    **Formule:**
+    
+    Chaque PC est une combinaison linéaire des variables originales:
+    
+    $$PC_1 = w_{1,1} \\cdot x_1 + w_{1,2} \\cdot x_2 + ... + w_{1,7} \\cdot x_7$$
+    
+    Où w_{i,j} sont les **loadings** (contributions).
+    """)
+    
+    try:
+        acp_df = pd.read_csv('19_acp_details.csv')
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("### Variance Expliquée")
+            var_row = acp_df[acp_df['Element'] == 'Variance expliquée (%)'].iloc[0]
+            st.markdown(f"""
+            - **PC1:** {var_row['PC1']}
+            - **PC2:** {var_row['PC2']}
+            - **Total 2D:** {var_row['Total_2D']}
+            """)
+        
+        with col2:
+            st.markdown("### Valeurs Propres (Eigenvalues)")
+            eigen_row = acp_df[acp_df['Element'] == 'Valeurs propres (variance)'].iloc[0]
+            st.markdown(f"""
+            - **λ₁:** {eigen_row['PC1']}
+            - **λ₂:** {eigen_row['PC2']}
+            - **Total:** {eigen_row['Total_2D']}
+            """)
+        
+        st.markdown("---")
+        
+        st.markdown("### Loadings des Variables (Contributions)")
+        st.markdown("Chaque coefficient montre comment la variable contribue à PC1 et PC2:")
+        
+        loadings_df = acp_df[acp_df['Element'].str.startswith('Loading_')].copy()
+        loadings_df['Variable'] = loadings_df['Element'].str.replace('Loading_', '')
+        loadings_df = loadings_df[['Variable', 'PC1', 'PC2']]
+        
+        st.dataframe(loadings_df, use_container_width=True, hide_index=True)
+        
+        st.markdown("""
+        **Interprétation des Loadings:**
+        - **Variables avec grand loading en PC1** (≈0.6): `ass_total`, `ass_trade`, `inc_trade`
+          → PC1 = **Taille et activité de trading**
+        
+        - **Variables avec grand loading en PC2** (≈0.7): `in_roa`, `in_roe`
+          → PC2 = **Rentabilité**
+        
+        - **Variables avec petit loading**: `rt_rwa`, `in_trade`
+          → Peu d'importance dans les 2 principales composantes
+        """)
+        
+    except Exception as e:
+        st.warning(f"Fichier ACP details non disponible: {e}")
     
     st.markdown("---")
     
@@ -427,10 +494,125 @@ r, p_value = pearsonr(assets, roa)
 # Silhouette Score
 from sklearn.metrics import silhouette_score
 score = silhouette_score(X_scaled, clusters)
+
+# ACP
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Loadings (contributions)
+loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
         """, language='python')
 
 # ============================================================================
-# PAGE 5: CLUSTERING
+# PAGE 5: ANALYSE EN COMPOSANTES PRINCIPALES (ACP)
+# ============================================================================
+
+elif page == "📊 Analyse ACP":
+    st.title("📊 Analyse en Composantes Principales (ACP)")
+    st.markdown("Réduction dimensionnelle: 7 variables → 2 dimensions pour visualisation")
+    
+    st.markdown("## 🎯 Objectif de l'ACP")
+    st.markdown("""
+    L'ACP permet de:
+    - **Visualiser** les données multi-dimensionnelles en 2D
+    - **Identifier** les directions de plus grande variance
+    - **Comprendre** les corrélations entre variables
+    - **Valider** la qualité du clustering en 2D
+    """)
+    
+    st.markdown("## 📈 Variance Expliquée")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("PC1 Variance", "35.80%")
+    with col2:
+        st.metric("PC2 Variance", "20.44%")
+    with col3:
+        st.metric("Total", "56.24%")
+    
+    st.markdown("""
+    **Interprétation:** Les 2 premières composantes principales capturent 56.24% de la variance totale.
+    Cela signifie que nous retenons plus de la moitié de l'information en réduisant de 7D à 2D.
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("## 1️⃣ Projection ACP - Clusters en 2D")
+    st.markdown("Chaque point = une banque, coloré par son cluster")
+    
+    try:
+        from PIL import Image
+        img = Image.open('16_acp_clusters.png')
+        st.image(img, width='stretch', caption='Clusters projetés sur les deux premières composantes principales')
+    except:
+        st.error("Graphique non disponible")
+    
+    st.markdown("---")
+    
+    st.markdown("## 2️⃣ Biplot - Contributions des Variables")
+    st.markdown("Chaque flèche = une variable | Couleur distincte pour chaque variable")
+    
+    try:
+        img = Image.open('17_acp_biplot.png')
+        st.image(img, width='stretch', caption='Biplot montrant la contribution de chaque variable aux PC1 et PC2')
+    except:
+        st.error("Graphique non disponible")
+    
+    st.markdown("""
+    **Comment lire le biplot:**
+    - **Longueur de la flèche** = importance de la variable
+    - **Direction** = dans quelle composante elle contribue
+    - **Flèches proches** = variables corrélées
+    - **Flèches opposées** = variables anti-corrélées
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("## 3️⃣ Variance Cumulée")
+    st.markdown("Combien de variance on explique avec k composantes?")
+    
+    try:
+        img = Image.open('18_acp_variance.png')
+        st.image(img, width='stretch', caption='Variance cumulée en fonction du nombre de composantes')
+    except:
+        st.error("Graphique non disponible")
+    
+    st.markdown("""
+    **Observations:**
+    - Avec 4 composantes: ~85% de variance
+    - Avec 5 composantes: ~95% de variance
+    - Avec 7 composantes: 100% (toutes les variables)
+    
+    Le choix de k=2 ou k=3 représente un bon trade-off entre **visualisation** et **conservation d'information**.
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("## 📝 Code Python")
+    
+    with st.expander("🔍 Voir le code"):
+        st.code("""
+from sklearn.decomposition import PCA
+
+# Normalisation des données
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# ACP
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Variance expliquée
+print(f"PC1: {pca.explained_variance_ratio_[0]:.2%}")
+print(f"PC2: {pca.explained_variance_ratio_[1]:.2%}")
+
+# Contributions des variables
+loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
+        """, language='python')
+
+# ============================================================================
+# PAGE 6: CLUSTERING
 # ============================================================================
 
 elif page == "🎯 Clustering":
@@ -469,8 +651,40 @@ elif page == "🎯 Clustering":
     ax.legend(title='Cluster')
     st.pyplot(fig, use_container_width=True)
 
+    st.markdown("---")
+    
+    st.markdown("## ❌ Centroïdes Finales du Clustering (Croix X)")
+    st.markdown("""
+    Les centroïdes (points rouges marqués avec des **croix X**) représentent le **centre de chaque cluster**.
+    C'est la position moyenne de tous les points appartenant à ce cluster, dans l'espace des variables normalisées.
+    """)
+    
+    try:
+        img = plt.imread('20_kmeans_centroides_finales.png')
+        st.image(img, caption="K-Means: Centroïdes Finales - La position finale des 4 centroïdes après convergence de l'algorithme")
+    except:
+        st.warning("Graphique des centroïdes non disponible")
+
+    st.markdown("---")
+    
+    st.markdown("## 🔄 Évolution des Centroïdes lors de la Convergence")
+    st.markdown("""
+    Ce graphique montre **comment les centroïdes se déplacent** lors des itérations du K-means:
+    - 🔵 **Cercles bleus**: Position intermédiaire des centroïdes (après 3 itérations)
+    - ❌ **Croix rouges**: Position finale des centroïdes (après convergence complète)
+    - 🟣 **Flèches violettes**: Indiquent le déplacement de chaque centroïde
+    
+    Cela montre que l'algorithme a bien **bougé les centroïdes** pour trouver les groupes optimaux.
+    """)
+    
+    try:
+        img = plt.imread('21_kmeans_evolution_centroides.png')
+        st.image(img, caption="Évolution des Centroïdes: De la position intermédiaire (itération 3) à la position finale")
+    except:
+        st.warning("Graphique d'évolution des centroïdes non disponible")
+
 # ============================================================================
-# PAGE 6: ANALYSE PAR PAYS
+# PAGE 7: ANALYSE PAR PAYS
 # ============================================================================
 
 elif page == "🌍 Analyse par Pays":
