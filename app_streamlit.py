@@ -611,106 +611,145 @@ loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
 
 elif page == "📊 Analyse ACP":
     st.title("Analyse en Composantes Principales")
-    st.markdown("Réduction dimensionnelle pour visualisation et interprétation")
+    st.markdown("Réduction dimensionnelle pour résumer les modèles d'affaires bancaires")
     
     st.markdown("## Objectif")
     st.markdown("""
-    L'ACP permet de:
-    - Visualiser les données multi-dimensionnelles en 2D
-    - Identifier les directions de plus grande variance
-    - Comprendre les corrélations entre variables
-    - Valider la qualité du clustering en 2D
+    L'Analyse en Composantes Principales (ACP) est utilisée pour résumer l'information contenue dans 
+    plusieurs indicateurs financiers et analyser les différences de business model des banques 
+    coopératives européennes entre 2005 et 2015.
     """)
     
-    st.markdown("## 📈 Variance Expliquée")
+    st.markdown("---")
+    
+    st.markdown("## Variables Utilisées")
+    st.markdown("""
+    L'ACP repose sur des variables représentant :
+    
+    - **Taille et activité:** ass_total, ass_trade, inc_trade
+    - **Rentabilité:** in_roa, in_roe
+    - **Risque et structure financière:** rt_rwa, in_trade
+    
+    Ces variables couvrent les dimensions clés du modèle bancaire en combinant des indicateurs de taille, 
+    d'activité de marché, de rentabilité et de risque. Elles permettent ainsi d'analyser conjointement 
+    les choix stratégiques des banques coopératives, leur performance économique et leur degré 
+    d'exposition aux activités risquées, dans un cadre synthétique adapté à la comparaison pré et post-crise.
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("## Variance Expliquée")
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("PC1 Variance", "35.80%")
+        st.metric("PC1 Variance", "35.7%")
     with col2:
-        st.metric("PC2 Variance", "20.44%")
+        st.metric("PC2 Variance", "20.8%")
     with col3:
-        st.metric("Total", "56.24%")
+        st.metric("Cumul PC1+PC2", "56.5%")
     
     st.markdown("""
-    **Interprétation:** Les 2 premières composantes principales capturent 56.24% de la variance totale.
-    Cela signifie que nous retenons plus de la moitié de l'information en réduisant de 7D à 2D.
+    La première composante principale (PC1) explique environ 35,7 % de la variance totale et la 
+    seconde (PC2) environ 20,8 %. Les deux premières composantes cumulent ainsi près de 56,5 % 
+    de l'information contenue dans les 7 variables originales. Ce niveau de variance expliquée 
+    est suffisant pour une analyse en composantes principales, car il permet de résumer efficacement 
+    la structure globale des données tout en conservant l'essentiel des relations entre les variables. 
+    La projection sur le plan (PC1, PC2) offre donc une représentation fiable des principales 
+    différences entre les banques.
     """)
     
     st.markdown("---")
     
-    st.markdown("## 1. Projection ACP - Clusters en 2D")
-    st.markdown("Visualisation de chaque banque par ses 2 composantes principales, colorée par cluster")
+    st.markdown("## Visualisation de la Variance")
     
-    try:
-        from PIL import Image
-        img = Image.open('16_acp_clusters.png')
-        st.image(img, width='stretch', caption='Clusters projetés sur les deux premières composantes principales')
-    except:
-        st.error("Graphique non disponible")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### Variance par Composante")
+        try:
+            from PIL import Image
+            img = Image.open('ACP_Graph1.png')
+            st.image(img, use_container_width=True)
+        except:
+            st.info("Graphique ACP_Graph1.png non disponible")
+    
+    with col2:
+        st.markdown("### Variance Cumulée")
+        try:
+            img = Image.open('ACP_Graph2.png')
+            st.image(img, use_container_width=True)
+        except:
+            st.info("Graphique ACP_Graph2.png non disponible")
     
     st.markdown("---")
     
-    st.markdown("## 2. Biplot - Contributions des Variables")
-    st.markdown("Chaque flèche représente une variable et sa contribution aux composantes principales")
-    
-    try:
-        img = Image.open('17_acp_biplot.png')
-        st.image(img, width='stretch', caption='Biplot montrant la contribution de chaque variable aux PC1 et PC2')
-    except:
-        st.error("Graphique non disponible")
-    
+    st.markdown("## Projection des Banques")
     st.markdown("""
-    **Comment lire le biplot:**
-    - **Longueur de la flèche** = importance de la variable
-    - **Direction** = dans quelle composante elle contribue
-    - **Flèches proches** = variables corrélées
-    - **Flèches opposées** = variables anti-corrélées
+    La projection des banques sur le plan PC1–PC2 montre une forte concentration autour de l'origine, 
+    correspondant à des banques de taille moyenne. Quelques établissements apparaissent très éloignés 
+    sur PC1, traduisant des banques de grande taille ou fortement orientées vers le trading.
+    
+    La période post-crise présente moins de profils extrêmes, suggérant une réduction des stratégies 
+    les plus risquées après 2008.
     """)
     
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### Projection Pré-crise")
+        try:
+            img = Image.open('ACP_Graph3.png')
+            st.image(img, use_container_width=True)
+        except:
+            st.info("Graphique ACP_Graph3.png non disponible")
+    
+    with col2:
+        st.markdown("### Projection Post-crise")
+        try:
+            img = Image.open('ACP_Graph4.png')
+            st.image(img, use_container_width=True)
+        except:
+            st.info("Graphique ACP_Graph4.png non disponible")
+    
     st.markdown("---")
     
-    st.markdown("## 3. Variance Cumulée")
-    st.markdown("Variance explicative en fonction du nombre de composantes utilisées")
+    st.markdown("## Interprétation des Axes")
     
-    try:
-        img = Image.open('18_acp_variance.png')
-        st.image(img, width='stretch', caption='Variance cumulée en fonction du nombre de composantes')
-    except:
-        st.error("Graphique non disponible")
-    
+    st.markdown("### Biplot - Contributions des Variables")
     st.markdown("""
-    **Observations:**
-    - Avec 4 composantes: ~85% de variance
-    - Avec 5 composantes: ~95% de variance
-    - Avec 7 composantes: 100% (toutes les variables)
+    Le premier axe principal (PC1) est principalement associé à la taille du bilan et à l'intensité 
+    des activités de trading, comme le montrent les fortes contributions des variables ass_total, 
+    ass_trade et inc_trade. Il reflète un gradient allant des banques de petite taille, peu actives 
+    sur les marchés, vers des établissements plus importants et davantage orientés vers les activités 
+    de marché.
     
-    Le choix de k=2 ou k=3 représente un bon trade-off entre **visualisation** et **conservation d'information**.
+    Le second axe (PC2) est dominé par les indicateurs de rentabilité, notamment in_roa et in_roe. 
+    Il permet de distinguer les banques selon leur capacité à générer des performances économiques, 
+    indépendamment de leur taille ou de leur niveau d'activité.
+    
+    Ces deux axes mettent ainsi en évidence une opposition entre une logique de volume et d'exposition 
+    aux marchés financiers, et une logique de performance économique, offrant une lecture synthétique 
+    des stratégies bancaires.
     """)
     
+    try:
+        img = Image.open('ACP_Graph5.png')
+        st.image(img, use_container_width=True, caption='Biplot montrant la contribution de chaque variable')
+    except:
+        st.info("Graphique ACP_Graph5.png non disponible")
+    
     st.markdown("---")
     
-    st.markdown("## 📝 Code Python")
+    st.markdown("## Conclusion")
+    st.markdown("""
+    L'ACP met en évidence deux dimensions majeures du business model des banques coopératives :
     
-    with st.expander("🔍 Voir le code"):
-        st.code("""
-from sklearn.decomposition import PCA
-
-# Normalisation des données
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-# ACP
-pca = PCA(n_components=2)
-X_pca = pca.fit_transform(X_scaled)
-
-# Variance expliquée
-print(f"PC1: {pca.explained_variance_ratio_[0]:.2%}")
-print(f"PC2: {pca.explained_variance_ratio_[1]:.2%}")
-
-# Contributions des variables
-loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
-        """, language='python')
+    1. **Taille et intensité du trading** (axe PC1)
+    2. **Rentabilité économique** (axe PC2)
+    
+    Après la crise financière de 2008, les banques semblent s'orienter vers des modèles plus prudents, 
+    avec une réduction des comportements extrêmes, tout en conservant une forte hétérogénéité de performance.
+    """)
 
 # ============================================================================
 # PAGE 6: CLUSTERING
