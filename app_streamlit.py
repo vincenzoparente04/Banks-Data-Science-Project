@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -704,12 +705,56 @@ elif page == "📊 Analyse ACP":
             st.info("Graphique ACP_Graph3.png non disponible")
     
     with col2:
-        st.markdown("### Projection Post-crise")
-        try:
-            img = Image.open('ACP_Graph4.png')
-            st.image(img, use_container_width=True)
-        except:
-            st.info("Graphique ACP_Graph4.png non disponible")
+        st.markdown("### Projection Interactive par Pays")
+        
+        # Sélection des pays
+        all_countries = sorted(df_clean['country_code'].unique())
+        selected_countries = st.multiselect(
+            "Sélectionnez les pays à afficher:",
+            all_countries,
+            default=df_clean['country_code'].value_counts().head(8).index.tolist()
+        )
+        
+        if selected_countries:
+            # Préparer les données pour l'ACP
+            available_vars = ['ass_total', 'ass_trade', 'inc_trade', 'in_roa', 'rt_rwa', 'in_roe', 'in_trade']
+            X = df_clean[available_vars].dropna()
+            
+            # Standardisation
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
+            
+            # ACP
+            pca = PCA(n_components=2)
+            scores = pca.fit_transform(X_scaled)
+            
+            # DataFrame avec résultats
+            scores_df = pd.DataFrame(scores, columns=["PC1", "PC2"])
+            scores_df['country_code'] = df_clean[available_vars].notna().all(axis=1)
+            scores_df['country_code'] = df_clean.loc[df_clean[available_vars].notna().all(axis=1), 'country_code'].values
+            
+            # Filtrer par pays sélectionnés
+            scores_filtered = scores_df[scores_df['country_code'].isin(selected_countries)]
+            
+            # Graphique
+            fig, ax = plt.subplots(figsize=(10, 7))
+            for country in selected_countries:
+                country_data = scores_filtered[scores_filtered['country_code'] == country]
+                ax.scatter(country_data['PC1'], country_data['PC2'], 
+                          label=country, alpha=0.6, s=50)
+            
+            pc1_var = pca.explained_variance_ratio_[0] * 100
+            pc2_var = pca.explained_variance_ratio_[1] * 100
+            
+            ax.set_xlabel(f'PC1 ({pc1_var:.1f}%)', fontsize=11)
+            ax.set_ylabel(f'PC2 ({pc2_var:.1f}%)', fontsize=11)
+            ax.set_title('Projection ACP - Sélection de Pays', fontweight='bold', fontsize=12)
+            ax.legend(title='Pays', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
+            ax.grid(True, alpha=0.3)
+            
+            st.pyplot(fig, use_container_width=True)
+        else:
+            st.info("Veuillez sélectionner au moins un pays")
     
     st.markdown("---")
     
