@@ -15,3 +15,10 @@ Thumbs.db
 # Logs (au cas où)
 *.log
 	
+myenv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.Rhistory
+.streamlit/secrets.toml
